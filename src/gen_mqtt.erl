@@ -239,10 +239,11 @@ wrap_res(ok, _StateName, _State) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 connecting(connect, State) ->
     #state{host = Host, port = Port, transport={Transport, Opts}, client=ClientId, info_fun=InfoFun} = State,
-    case ClientId of
-        "clientPool1-1-1" -> error_logger:info_msg("connecting from dhruvjain99 fork - change 2");
-        _ -> ignore
-    end,
+%%    case ClientId of
+%%        ["clientPool2-1","-","2"] -> error_logger:info_msg("connecting from dhruvjain99 fork - change 2");
+%%        _ -> ignore
+%%    end,
+    error_logger:info_msg("~p", [ClientId]),
     case Transport:connect(Host, Port, [binary, {packet, raw}|Opts]) of
         {ok, Sock} ->
             NewInfoFun = call_info_fun({connect_out, ClientId}, InfoFun),

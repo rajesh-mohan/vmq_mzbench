@@ -252,7 +252,7 @@ connecting(connect, State) ->
             {next_state, waiting_for_connack, NewState};
         {error, _Reason} ->
             error_logger:error_msg("connection to ~p:~p failed due to ~p", [Host, Port, _Reason]),
-%%            gen_fsm:send_event_after(3000, connect),
+            gen_fsm:send_event_after(3000, connect),
             wrap_res(connecting, on_connect_error, [server_not_found], State)
     end;
 connecting(disconnect, State) ->
@@ -628,18 +628,18 @@ send_frame(Transport, Sock, Frame) ->
     end.
 
 maybe_reconnect(Fun, Args, #state{client=ClientId, reconnect_timeout=Timeout, transport={Transport,_}, info_fun=InfoFun} = State) ->
-%%    case Timeout of
-%%        undefined ->
-%%            {stop, normal, State};
-%%        _ ->
-%%            Transport:close(State#state.sock),
-%%            gen_fsm:send_event_after(Timeout, connect),
-%%            NewInfoFun = call_info_fun({reconnect, ClientId}, InfoFun),
-%%            wrap_res(connecting, Fun, Args,
-%%                     cleanup_session(State#state{sock=undefined, info_fun=NewInfoFun}))
-%%    end.
-    error_logger:info_msg("Ignoring maybe_reconnect"),
-    {stop, normal, State}.
+    case Timeout of
+        undefined ->
+            {stop, normal, State};
+        _ ->
+            Transport:close(State#state.sock),
+            gen_fsm:send_event_after(Timeout, connect),
+            NewInfoFun = call_info_fun({reconnect, ClientId}, InfoFun),
+            wrap_res(connecting, Fun, Args,
+                     cleanup_session(State#state{sock=undefined, info_fun=NewInfoFun}))
+    end.
+%%    error_logger:info_msg("Ignoring maybe_reconnect"),
+%%    {stop, normal, State}.
 
 maybe_queue_outgoing(_PubReq, #state{o_queue=#queue{max=0}}=State) ->
     %% queue is disabled

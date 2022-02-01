@@ -746,7 +746,10 @@ get_remove_unacked_msg(MessageId, #state{unacked_msgs=UnackedMsgs} = State) ->
 '++'(N) -> N + 1.
 
 active_once(gen_tcp, Sock) ->
-    ok = inet:setopts(Sock, [{active, once}]);
+    case inet:setopts(Sock, [{active, once}]) of
+        ok -> ok;
+        {error, Err} -> error_logger:error_msg("[active_once] ~p", [Err])
+    end.
 active_once(ssl, Sock) ->
     ok = ssl:setopts(Sock, [{active, once}]).
 

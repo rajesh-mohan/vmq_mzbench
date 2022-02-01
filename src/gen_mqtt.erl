@@ -239,7 +239,10 @@ wrap_res(ok, _StateName, _State) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 connecting(connect, State) ->
     #state{host = Host, port = Port, transport={Transport, Opts}, client=ClientId, info_fun=InfoFun} = State,
-    error_logger:info_msg("connecting from dhruvjain99 fork - change 1"),
+    case ClientId of
+        "clientPool1-1-1" -> error_logger:info_msg("connecting from dhruvjain99 fork - change 2");
+        _ -> ignore
+    end,
     case Transport:connect(Host, Port, [binary, {packet, raw}|Opts]) of
         {ok, Sock} ->
             NewInfoFun = call_info_fun({connect_out, ClientId}, InfoFun),
@@ -625,16 +628,18 @@ send_frame(Transport, Sock, Frame) ->
     end.
 
 maybe_reconnect(Fun, Args, #state{client=ClientId, reconnect_timeout=Timeout, transport={Transport,_}, info_fun=InfoFun} = State) ->
-    case Timeout of
-        undefined ->
-            {stop, normal, State};
-        _ ->
-            Transport:close(State#state.sock),
-            gen_fsm:send_event_after(Timeout, connect),
-            NewInfoFun = call_info_fun({reconnect, ClientId}, InfoFun),
-            wrap_res(connecting, Fun, Args,
-                     cleanup_session(State#state{sock=undefined, info_fun=NewInfoFun}))
-    end.
+%%    case Timeout of
+%%        undefined ->
+%%            {stop, normal, State};
+%%        _ ->
+%%            Transport:close(State#state.sock),
+%%            gen_fsm:send_event_after(Timeout, connect),
+%%            NewInfoFun = call_info_fun({reconnect, ClientId}, InfoFun),
+%%            wrap_res(connecting, Fun, Args,
+%%                     cleanup_session(State#state{sock=undefined, info_fun=NewInfoFun}))
+%%    end.
+    error_logger:info_msg("Ignoring maybe_reconnect"),
+    {stop, normal, State}.
 
 maybe_queue_outgoing(_PubReq, #state{o_queue=#queue{max=0}}=State) ->
     %% queue is disabled

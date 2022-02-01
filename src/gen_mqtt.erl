@@ -239,6 +239,7 @@ wrap_res(ok, _StateName, _State) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 connecting(connect, State) ->
     #state{host = Host, port = Port, transport={Transport, Opts}, client=ClientId, info_fun=InfoFun} = State,
+    error_logger:info_msg("connecting from dhruvjain99 fork - change 1"),
     case Transport:connect(Host, Port, [binary, {packet, raw}|Opts]) of
         {ok, Sock} ->
             NewInfoFun = call_info_fun({connect_out, ClientId}, InfoFun),
@@ -248,7 +249,7 @@ connecting(connect, State) ->
             {next_state, waiting_for_connack, NewState};
         {error, _Reason} ->
             error_logger:error_msg("connection to ~p:~p failed due to ~p", [Host, Port, _Reason]),
-            gen_fsm:send_event_after(3000, connect),
+%%            gen_fsm:send_event_after(3000, connect),
             wrap_res(connecting, on_connect_error, [server_not_found], State)
     end;
 connecting(disconnect, State) ->

@@ -240,7 +240,7 @@ wrap_res(ok, _StateName, _State) ->
 connecting(connect, State) ->
     #state{host = Host, port = Port, transport={Transport, Opts}, client=ClientId, info_fun=InfoFun} = State,
     case ClientId of
-        ["clientPool2-1","-","2"] -> error_logger:info_msg("connecting from dhruvjain99 fork - change 2");
+        ["clientPool2-1","-","2"] -> error_logger:info_msg("connecting from dhruvjain99 fork");
         _ -> ignore
     end,
     case Transport:connect(Host, Port, [binary, {packet, raw}|Opts]) of
@@ -315,6 +315,7 @@ connected(disconnect, State=#state{transport={Transport, _}, sock=Sock}) ->
     {stop, normal, State};
 
 connected(maybe_reconnect, State) ->
+    error_logger:error_msg("[connected][on_disconnect] Calling reconnect"),
     maybe_reconnect(on_disconnect, [], State);
 
 connected(_Event, State) ->
@@ -409,14 +410,19 @@ handle_frame(waiting_for_connack, #mqtt_connack{return_code=ReturnCode}, State0)
             State2 = maybe_publish_offline_msgs(State1),
             wrap_res(connected, on_connect, [], start_ping_timer(State2#state{info_fun=NewInfoFun}));
         ?CONNACK_PROTO_VER ->
+            error_logger:error_msg("[handle_frame][waiting_for_connack][CONNACK_PROTO_VER] ReturnCode : ~p", [?CONNACK_PROTO_VER]),
             maybe_reconnect(on_connect_error, [wrong_protocol_version], State0);
         ?CONNACK_INVALID_ID ->
+            error_logger:error_msg("[handle_frame][waiting_for_connack][CONNACK_INVALID_ID] ReturnCode : ~p", [?CONNACK_INVALID_ID]),
             maybe_reconnect(on_connect_error, [invalid_id], State0);
         ?CONNACK_SERVER ->
+            error_logger:error_msg("[handle_frame][waiting_for_connack][CONNACK_SERVER] ReturnCode : ~p", [?CONNACK_SERVER]),
             maybe_reconnect(on_connect_error, [server_not_available], State0);
         ?CONNACK_CREDENTIALS ->
+            error_logger:error_msg("[handle_frame][waiting_for_connack][CONNACK_CREDENTIALS] ReturnCode : ~p", [?CONNACK_CREDENTIALS]),
             maybe_reconnect(on_connect_error, [invalid_credentials], State0);
         ?CONNACK_AUTH ->
+            error_logger:error_msg("[handle_frame][waiting_for_connack][CONNACK_AUTH] ReturnCode : ~p", [?CONNACK_AUTH]),
             maybe_reconnect(on_connect_error, [not_authorized], State0)
     end;
 
@@ -638,8 +644,6 @@ maybe_reconnect(Fun, Args, #state{client=ClientId, reconnect_timeout=Timeout, tr
             wrap_res(connecting, Fun, Args,
                      cleanup_session(State#state{sock=undefined, info_fun=NewInfoFun}))
     end.
-%%    error_logger:info_msg("Ignoring maybe_reconnect"),
-%%    {stop, normal, State}.
 
 maybe_queue_outgoing(_PubReq, #state{o_queue=#queue{max=0}}=State) ->
     %% queue is disabled
